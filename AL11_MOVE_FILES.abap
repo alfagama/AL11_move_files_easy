@@ -27,7 +27,7 @@ PARAMETERS: P_MOVE  TYPE STRING MODIF ID MD1 LOWER CASE,
             P_FROM  TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth/files/',
             P_TO    TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth_else/files/'.
 PARAMETERS: P_FDEL  TYPE STRING MODIF ID MD1 LOWER CASE,
-            P_DDEL  TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth_else/files/'.
+            P_DDEL  TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../want_delete/files/'.
 SELECTION-SCREEN END OF BLOCK block3.
 
 *&---------------------------------------------------------------------*
@@ -219,8 +219,6 @@ FORM move_dir.
 ENDFORM.
 *&---------------------------------------------------------------------*
 FORM delete_dir.
-*  OPEN DATASET del_dir FOR INPUT IN TEXT MODE ENCODING DEFAULT WITH SMART LINEFEED.
-*  CLOSE DATASET del_dir.
   DELETE DATASET del_dir.
   IF sy-subrc = 0.
     MESSAGE 'File deleted successfully!' TYPE 'S'.
