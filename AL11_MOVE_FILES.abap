@@ -1,27 +1,33 @@
 *&---------------------------------------------------------------------*
-*& Report Z_AL11_MOVING_FILES
+*& Report ZFI_P_JV_UPLOAD_AL11_UP_TEST
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-REPORT Z_AL11_MOVING_FILES.
+REPORT ZFI_P_JV_UPLOAD_AL11_UP_TEST.
+
 *&---------------------------------------------------------------------*
 *&---------------------------------------------------------------------*
 DATA: filename type string,
       directory_uploaded_and_file TYPE string.
 DATA: dir_from TYPE string,
       dir_to   TYPE string.
+DATA: del_dir  TYPE string.
 
 *&---------------------------------------------------------------------*
 *&---------------------------------------------------------------------*
-SELECTION-SCREEN BEGIN OF BLOCK block1.
-PARAMETERS: P_CHK AS CHECKBOX USER-COMMAND USR.
+SELECTION-SCREEN BEGIN OF BLOCK block1 WITH FRAME TITLE text-001.
+PARAMETERS: P_CHKU AS CHECKBOX USER-COMMAND USR,
+            P_CHKM AS CHECKBOX USER-COMMAND USR,
+            P_CHKD AS CHECKBOX USER-COMMAND USR.
 SELECTION-SCREEN END OF BLOCK block1.
 SELECTION-SCREEN BEGIN OF BLOCK block3.
-PARAMETERS: P_FILE TYPE STRING MODIF ID MD1 LOWER CASE,
-            P_DIR TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../inbound/'.
+PARAMETERS: P_FILE  TYPE STRING MODIF ID MD1 LOWER CASE,
+            P_DIR   TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../inbound/'.
 PARAMETERS: P_MOVE  TYPE STRING MODIF ID MD1 LOWER CASE,
             P_FROM  TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth/files/',
             P_TO    TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth_else/files/'.
+PARAMETERS: P_FDEL  TYPE STRING MODIF ID MD1 LOWER CASE,
+            P_DDEL  TYPE eps2filnam MODIF ID MD1 DEFAULT '/directoryX/../sth_else/files/'.
 SELECTION-SCREEN END OF BLOCK block3.
 
 *&---------------------------------------------------------------------*
@@ -29,7 +35,7 @@ SELECTION-SCREEN END OF BLOCK block3.
 AT SELECTION-SCREEN OUTPUT.
 LOOP AT SCREEN.
   IF screen-name CS 'P_FILE' OR screen-name CS 'P_DIR'.
-    IF P_CHK = 'X'.
+    IF P_CHKU = ''.
       screen-input = 0.
       screen-invisible = 1.
     ELSE.
@@ -39,7 +45,17 @@ LOOP AT SCREEN.
     MODIFY SCREEN.
   ENDIF.
   IF screen-name CS 'P_MOVE' OR screen-name CS 'P_FROM' OR screen-name CS 'P_TO'.
-    IF P_CHK = ''.
+    IF P_CHKM = ''.
+      screen-input = 0.
+      screen-invisible = 1.
+    ELSE.
+      screen-input = 1.
+      screen-invisible = 0.
+    ENDIF.
+    MODIFY SCREEN.
+  ENDIF.
+  IF screen-name CS 'P_FDEL' OR screen-name CS 'P_DDEL'.
+    IF P_CHKD = ''.
       screen-input = 0.
       screen-invisible = 1.
     ELSE.
@@ -58,14 +74,17 @@ PERFORM f4_file_open_dialog CHANGING p_file.
 *&---------------------------------------------------------------------*
 *&---------------------------------------------------------------------*
 START-OF-SELECTION.
-IF P_CHK = ''.
+IF P_CHKU = 'X'.
   PERFORM get_filename.
   CONCATENATE P_DIR filename INTO directory_uploaded_and_file.
   PERFORM csv_read.
-ELSE.
+ELSEIF P_CHKM = 'X'.
   CONCATENATE P_FROM P_MOVE INTO dir_from.
   CONCATENATE P_TO   P_MOVE INTO dir_to  .
   PERFORM move_dir.
+ELSEIF P_CHKD = 'X'.
+  CONCATENATE P_DDEL P_FDEL INTO del_dir.
+  PERFORM delete_dir.
 ENDIF.
 
 *&---------------------------------------------------------------------*
@@ -198,3 +217,16 @@ FORM move_dir.
   ENDIF.
 
 ENDFORM.
+*&---------------------------------------------------------------------*
+FORM delete_dir.
+*  OPEN DATASET del_dir FOR INPUT IN TEXT MODE ENCODING DEFAULT WITH SMART LINEFEED.
+*  CLOSE DATASET del_dir.
+  DELETE DATASET del_dir.
+  IF sy-subrc = 0.
+    MESSAGE 'File deleted successfully!' TYPE 'S'.
+  ELSE.
+    MESSAGE 'File could not be deleted!' TYPE 'E'.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
